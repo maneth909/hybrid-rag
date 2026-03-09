@@ -2,6 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { FileText, Sparkles, Copy, Check, ChevronDown } from "lucide-react";
 import ChatInputBox from "./ChatInputBox";
 import SpaceBackground from "./SpaceBackground";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export interface Source {
   filename: string;
@@ -39,6 +43,52 @@ const getUniqueSources = (sources?: Source[]) => {
   });
   return Array.from(unique.values());
 };
+
+// --- Code Blocks Component---
+const CodeBlock = ({
+  language,
+  codeString,
+}: {
+  language: string;
+  codeString: string;
+}) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(codeString);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
+  return (
+    <div className="my-4 rounded-xl overflow-hidden border border-border/60 shadow-sm group/code">
+      <div className="flex items-center justify-between px-4 py-1.5 bg-secondary/80 border-b border-border/60 text-xs text-muted font-mono uppercase">
+        <span>{language}</span>
+        <button
+          onClick={handleCopy}
+          className="flex items-center gap-1.5 hover:text-blackcolor transition-colors"
+        >
+          {isCopied ? <Check size={14} /> : <Copy size={14} />}
+          {isCopied ? "Copied!" : "Copy"}
+        </button>
+      </div>
+      <SyntaxHighlighter
+        style={vscDarkPlus as any}
+        language={language}
+        PreTag="div"
+        customStyle={{
+          margin: 0,
+          padding: "1rem",
+          background: "#131314",
+          fontSize: "0.875rem",
+        }}
+      >
+        {codeString}
+      </SyntaxHighlighter>
+    </div>
+  );
+};
+// -------
 
 export default function ChatArea({
   userId,
@@ -173,6 +223,7 @@ export default function ChatArea({
       });
     } finally {
       setIsLoading(false);
+      isStreamingRef.current = false;
     }
   };
 
@@ -251,9 +302,83 @@ export default function ChatArea({
                         </div>
 
                         <div className="flex-1 space-y-4 overflow-hidden min-w-0 pb-6">
-                          <p className="leading-relaxed whitespace-pre-wrap text-blackcolor mt-0.5">
-                            {msg.content}
-                          </p>
+                          <div className="leading-relaxed text-blackcolor mt-0.5 space-y-3">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                p: ({ children }) => (
+                                  <p className="mb-2 last:mb-0">{children}</p>
+                                ),
+                                ul: ({ children }) => (
+                                  <ul className="list-disc pl-5 mb-2 space-y-1">
+                                    {children}
+                                  </ul>
+                                ),
+                                ol: ({ children }) => (
+                                  <ol className="list-decimal pl-5 mb-2 space-y-1">
+                                    {children}
+                                  </ol>
+                                ),
+                                li: ({ children }) => (
+                                  <li className="pl-1">{children}</li>
+                                ),
+                                h1: ({ children }) => (
+                                  <h1 className="text-xl font-bold mt-4 mb-2">
+                                    {children}
+                                  </h1>
+                                ),
+                                h2: ({ children }) => (
+                                  <h2 className="text-lg font-bold mt-4 mb-2">
+                                    {children}
+                                  </h2>
+                                ),
+                                h3: ({ children }) => (
+                                  <h3 className="text-md font-bold mt-3 mb-2">
+                                    {children}
+                                  </h3>
+                                ),
+                                a: ({ href, children }) => (
+                                  <a
+                                    href={href}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                  >
+                                    {children}
+                                  </a>
+                                ),
+                                code({
+                                  node,
+                                  inline,
+                                  className,
+                                  children,
+                                  ...props
+                                }: any) {
+                                  const match = /language-(\w+)/.exec(
+                                    className || "",
+                                  );
+                                  return !inline && match ? (
+                                    <CodeBlock
+                                      language={match[1]}
+                                      codeString={String(children).replace(
+                                        /\n$/,
+                                        "",
+                                      )}
+                                    />
+                                  ) : (
+                                    <code
+                                      className="bg-secondary/80 text-primary px-1.5 py-0.5 rounded-md text-sm font-mono"
+                                      {...props}
+                                    >
+                                      {children}
+                                    </code>
+                                  );
+                                },
+                              }}
+                            >
+                              {msg.content}
+                            </ReactMarkdown>
+                          </div>
 
                           {uniqueSources.length > 0 && (
                             <div className="mt-4 pt-3 border-t border-border/50">
@@ -302,7 +427,7 @@ export default function ChatArea({
                                 </div>
                               ) : (
                                 <>
-                                  <Copy size={14} /> Copy
+                                  <Copy size={14} /> Copy full message
                                 </>
                               )}
                             </button>
