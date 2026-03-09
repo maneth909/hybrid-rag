@@ -1,11 +1,12 @@
 from typing import List
 
 def build_rag_prompt(query: str, chunks: List[dict]) -> str:
-    system_msg = """You are a highly precise assistant. Answer the user's question using ONLY the provided context.
+    # Relaxed the rules to include conversation history
+    system_msg = """You are a highly precise assistant. Answer the user's question using the provided context and the conversation history.
 
 Rules:
-1. Answer ONLY from the context below.
-2. If the context does not contain the answer, say exactly: "I don't have enough information to answer that." Do not guess or use outside knowledge.
+1. Answer using the context below AND the previous conversation history.
+2. If the context and history do not contain the answer, say exactly: "I don't have enough information to answer that." Do not guess or use outside knowledge.
 3. Cite the source file you used in your answer (e.g., "According to example_report.pdf...").
 4. Be concise and precise."""
 

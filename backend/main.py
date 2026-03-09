@@ -227,10 +227,25 @@ async def query_documents_stream(request: QueryRequest):
             })
             yield f"data: {meta_payload}\n\n"
 
-            # 1. Retrieve chunks (Hybrid)
-            chunks = hybrid_search(request.query, request.user_id, request.top_k, request.document_ids)
+            # --- 1. CONTEXT WINDOW & SEARCH QUERY LOGIC ---
+            # a. Fetch all past messages from the database
+            raw_history = get_conversation_messages(conversation_id)
+            
+            # b. Create the Sliding Window (Get the last 4 messages, excluding the current question)
+            chat_history = raw_history[-5:-1] if len(raw_history) > 1 else []
 
-            # 2. Send Sources 
+            # c. Combine the last user question with the current one for the DB search
+            search_query = request.query
+            if chat_history:
+                last_user_msg = next((msg["content"] for msg in reversed(chat_history) if msg["role"] == "user"), "")
+                if last_user_msg:
+                    search_query = f"{last_user_msg} {request.query}"
+            # ----------------------------------------------
+
+            # 2. Retrieve chunks 
+            chunks = hybrid_search(search_query, request.user_id, request.top_k, request.document_ids)
+
+            # 3. Send Sources 
             sources = [
                 {
                     "filename": chunk["filename"],
@@ -242,13 +257,14 @@ async def query_documents_stream(request: QueryRequest):
             ]
             sources_payload = json.dumps({"type": "sources", "data": sources})
             yield f"data: {sources_payload}\n\n"
-
             
+            # 4. Build prompt using the original query 
             prompt = build_rag_prompt(request.query, chunks)
             groq = GroqClient()
             
             full_answer = "" 
-            for token in groq.generate_stream(prompt):
+            # 5. Pass the 'history' into the Groq client stream
+            for token in groq.generate_stream(prompt, history=chat_history):
                 full_answer += token
                 token_payload = json.dumps({"type": "token", "data": token})
                 yield f"data: {token_payload}\n\n"

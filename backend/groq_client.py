@@ -23,10 +23,19 @@ class GroqClient:
         )
         return response.choices[0].message.content
 
-    def generate_stream(self, prompt: str):
+    def generate_stream(self, prompt: str, history: list = None):
+        messages = []
+        
+        # 1. If we have past chat history, add it to the message array first
+        if history:
+            messages.extend(history)
+            
+        # 2. Add the brand new augmented question at the very end
+        messages.append({"role": "user", "content": prompt})
+
         stream = self.client.chat.completions.create(
             model=self.model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             temperature=0.1,
             max_tokens=500,
             stream=True
