@@ -15,7 +15,7 @@ def hybrid_search(query: str, user_id: str, top_k: int = 5, document_ids: Option
 
     # Process Dense Results
     for rank, doc in enumerate(dense_results):
-        chunk_id = doc['filename'] + doc['content'][:20] 
+        # chunk_id = doc['filename'] + doc['content'][:20] 
         unique_key = doc['content'] 
         
         chunk_data[unique_key] = doc

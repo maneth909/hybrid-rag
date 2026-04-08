@@ -171,7 +171,10 @@ async def remove_document(document_id: str, user_id: str):
 async def query_documents(request: QueryRequest):
     try:
         # 1. Retrieve relevant chunks (Hybrid)
-        chunks = hybrid_search(request.query, request.user_id, request.top_k, request.document_ids)
+        if request.document_ids is not None and len(request.document_ids) == 0:
+            chunks = []
+        else:
+            chunks = hybrid_search(request.query, request.user_id, request.top_k, request.document_ids)
 
         # 2. Format sources for the response
         sources = [
@@ -243,7 +246,10 @@ async def query_documents_stream(request: QueryRequest):
             # ----------------------------------------------
 
             # 2. Retrieve chunks 
-            chunks = hybrid_search(search_query, request.user_id, request.top_k, request.document_ids)
+            if request.document_ids is not None and len(request.document_ids) == 0:
+                chunks = []
+            else:
+                chunks = hybrid_search(search_query, request.user_id, request.top_k, request.document_ids)
 
             # 3. Send Sources 
             sources = [
