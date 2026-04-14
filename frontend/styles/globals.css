@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+/* CONFIGURATION */
+@theme {
+  --color-whitecolor: var(--color-whitecolor);
+  --color-blackcolor: var(--color-blackcolor);
+  --font-sans: var(--font-inter), "Inter", sans-serif;
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-tertiary: var(--color-tertiary);
+  --color-background: var(--color-background);
+  --color-muted: var(--color-muted);
+  --color-border: var(--color-border);
+  --color-error: var(--color-error);
+  --color-inputboxbg: var(--color-inputboxbg);
+  --color-chatinputboxbg: var(--color-inputboxbg);
+}
+
+/* DARK MODE SETUP */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* COLOR PALETTE */
+:root {
+  --color-blackcolor: #09090b;
+  --color-whitecolor: #ffffff;
+  --color-primary: #0c36fa;
+  --color-secondary: #f4f4f5;
+  --color-tertiary: #18181b;
+  --color-background: #ffffff;
+  --color-muted: #71717a;
+  --color-border: #e4e4e7;
+  --color-error: #ef4444;
+  --color-inputboxbg: color-mix(
+    in srgb,
+    var(--color-secondary) 15%,
+    transparent
+  );
+  --color-chatinputboxbg: color-mix(
+    in srgb,
+    var(--color-secondary) 15%,
+    transparent
+  );
+}
+
+/* .dark {
+  --color-background: #2c2c2c;
+  --color-secondary: #18181b;
+  --color-primary: #60a5fa;
+  --color-blackcolor: #fafafa;
+  --color-whitecolor: #ffffff;
+  --color-tertiary: #fafafa;
+  --color-muted: #a1a1aa;
+  --color-border: #38383f;
+  --color-error: #f87171;
+  --color-inputboxbg: #525252;
+} */
+
+.dark {
+  --color-background: #272729;
+  --color-secondary: #18181b;
+  --color-primary: #60a5fa;
+  --color-blackcolor: #fafafa;
+  --color-whitecolor: #ffffff;
+  --color-tertiary: #fafafa;
+  --color-muted: #a1a1aa;
+  --color-border: #38383f;
+  --color-error: #f87171;
+  --color-inputboxbg: color-mix(
+    in srgb,
+    var(--color-secondary) 15%,
+    transparent
+  );
+  --color-chatinputboxbg: #3f3f41;
+}
+
+/* GLOBAL RESETS */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-blackcolor);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+/* Auto-switch text color in dark mode */
+.dark body {
+  color: var(--color-whitecolor);
+}
